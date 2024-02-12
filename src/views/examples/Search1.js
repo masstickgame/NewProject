@@ -68,16 +68,26 @@ const Search1 = () => {
   const [selectedOption3, setSelectedOption3] = useState([]);
   const [itemteacher, setitemteacher] = useState([]);
   const [flagselectedOption, setFlagselectedOption] = useState(true);
-
-
-
-
+  const [des, setDes] = useState([]);
+  const [modaldes, setModaldes] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [sub_name2, setSub_name2] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState('');
+  const [selectedGroup, setselectedGroup] = useState('');
+  const [selectId_subject, setSelectId_subject] = useState('');
+  const [itemsuniversity, setItemsUniversity] = useState([]);
+  const [selectedOptionniversity, setSelectedOptionniversity] = useState('');
+  const [itemsubject, setItemsSubject] = useState([]);
+  const [teacherCols, setTeacherCols] = useState([]);
+  const [selectedValue, setSelectedValue] = useState('');
+  const [data, setData] = useState([]);
   useEffect(() => {
+
     let Items = sessionStorage.getItem('itemSchool2')
     setNames(sessionStorage.getItem('nameS'))
     let json = JSON.parse(Items)
     if (json.length != 0) {
-      if(json[0].groupuniversitys[0].indextea != null){
+      if (json[0].groupuniversitys[0].indextea != null) {
         setTeacherCols(json[0].groupuniversitys[0].indextea);
       }
       setItemsSchool2(json)
@@ -133,6 +143,36 @@ const Search1 = () => {
       setFlagselectedOption(false)
     }
   };
+  const toggle = () => setModal(!modal);
+  const toggledes = () => setModaldes(!modaldes);
+  const handleSelectChangeuniversity = (event) => {
+    setSelectedOptionniversity(event.target.value);
+    itemsuniversity.forEach(i => {
+      if (event.target.value === i.id_subject) {
+        setSelectId_subject(i.id_subject)
+        setSub_name2(i.sub_name)
+        setSelectedUnit(i.unit)
+        setselectedGroup(i.group)
+      }
+    });
+  };
+  const getuserbyidDatauniversity = async (ids) => {
+    for (let i = 0; i < itemsuniversity.length; i++) {
+      if (ids === itemsuniversity[i].id_subject) {
+        setDes(itemsuniversity[i].explanation)
+      }
+    }
+    toggledes()
+  };
+  const getuserbyidDatasubject = async (ids) => {
+    console.log(ids)
+    for (let i = 0; i < itemsubject.length; i++) {
+      if (ids === itemsubject[i].id_subject) {
+        setDes(itemsubject[i].explanation)
+      }
+    }
+    toggledes()
+  };
   const handleSelectChange2 = async (event) => {
     console.log(event.target.value);
     for (let i = 0; i < itemteacher.length; i++) {
@@ -173,9 +213,12 @@ const Search1 = () => {
     window.location.href = '/admin/rooms'
   }
   const nextpage = async () => {
-    if (user_type === 'admin'){
+    if (user_type === 'admin') {
       window.location.href = '/admin/compare'
-  }
+
+    }
+    // console.log(teacherCols)
+
     if (teacherCols.length === 0) {
       Swal.fire({
         title: "แจ้งเตือน!",
@@ -195,52 +238,105 @@ const Search1 = () => {
         });
         return; // ออกจากฟังก์ชันถ้าไม่มีข้อมูล
       }
-      
+
+
 
     }
     for (let index = 0; index < itemSchool2.length; index++) {
-      itemSchool2[index].teacher =''
+
+      itemSchool2[index].teacher = ''
       itemSchool2[index].teacher = JSON.stringify(teacherCols)
-      for(let ith = 0; ith < itemSchool2[index].groupuniversitys.length; ith++){
-        itemSchool2[index].groupuniversitys[ith].teacher =  JSON.stringify(teacherCols)
-        itemSchool2[index].groupuniversitys[ith].indextea =  teacherCols
+      for (let ith = 0; ith < itemSchool2[index].groupuniversitys.length; ith++) {
+        itemSchool2[index].groupuniversitys[ith].teacher = JSON.stringify(teacherCols)
+        itemSchool2[index].groupuniversitys[ith].indextea = teacherCols
       }
     }
-    
+    let arrs = []
+    for (let index = 0; index < itemSchool2.length; index++) {
+      let hasNtc = false;  // สร้างตัวแปรเพื่อตรวจสอบว่ามี "ntc" หรือไม่
+
+      for (let ith = 0; ith < itemSchool2[index].groupuniversitys.length; ith++) {
+        if (itemSchool2[index].groupuniversitys[ith]?.result_tc?.includes("ntc") === true) {
+          hasNtc = true;  // พบ "ntc" ใน groupuniversitys
+          break;  // หยุดการทำงานเมื่อพบ "ntc"
+        }
+      }
+
+      if (hasNtc) {
+        // เปลี่ยน itemSchool2 เป็น "ntc" ทั้งหมด
+        itemSchool2[index].teacher = JSON.stringify(teacherCols);
+
+        for (let groupIndex = 0; groupIndex < itemSchool2[index].groupuniversitys.length; groupIndex++) {
+          itemSchool2[index].groupuniversitys[groupIndex].teacher = JSON.stringify(teacherCols);
+          itemSchool2[index].groupuniversitys[groupIndex].indextea = teacherCols;
+        }
+
+        console.log(itemSchool2);
+      }
+    }
+
+
+
+    let newArrs = itemSchool2
+    arrs.forEach(arrss => {
+      newArrs = newArrs.filter(item => item.id_university !== arrss.id_university);
+    });
+    // console.log(newArrs)
+
     // ตรวจสอบความถูกต้องและดำเนินการต่อ
-    const response = await update_course_grade2(itemSchool2);
-    const response2 = await add_teacher(itemSchool2);
+    const response = await update_course_grade2(newArrs);
+    const response2 = await add_teacher(newArrs);
 
     // คุณอาจต้องเปลี่ยน itemSchool2 เป็น teacherCols ที่ใช้ในโค้ดของคุณ
 
     sessionStorage.setItem('teacherCols', JSON.stringify(teacherCols))
-    sessionStorage.setItem('itemSchool2', JSON.stringify(itemSchool2))
+    sessionStorage.setItem('itemSchool2', JSON.stringify(newArrs))
     window.location.href = '/admin/compare'
   }
 
-  const handleSelectCh = (event, index, subIndex,teacher, id_course) => {
+  const handleSelectCh = (event, index, subIndex, teacher, id_course) => {
     setSelected(event.target.value);
+
     itemSchool2[index].result_tc = event.target.value
     itemSchool2[index].groupuniversity[subIndex].result_tc = event.target.value
     itemSchool2[index].groupuniversitys[subIndex].result_tc = event.target.value
-    
-    console.log(itemSchool2)
+
+    // console.log(itemSchool2)
   }
 
-  const [teacherCols, setTeacherCols] = useState([
-    {
-      id: 1,
-      label: 'อาจารย์ท่านที่ 1',
-      selectedOption: '',
-    },
-  ]);
+
 
   const handleSelectChange = (colIndex, value) => {
-    const newTeacherCols = [...teacherCols];
-    newTeacherCols[colIndex].selectedOption = value;
-    console.log(newTeacherCols)
-    setTeacherCols(newTeacherCols);
+    for (let i = 0; i < teacherCols.length; i++) {
+      let teacherboo = teacherCols.some(item => item.selectedOption === value)
+      if (teacherboo === true) {
+        Swal.fire({
+          title: "แจ้งเตือน!",
+          text: "มีข้อมูลท่านอาจารย์นี้แล้ว",
+          icon: "error"
+        });
+        const newTeacherCols = [...teacherCols];
+        newTeacherCols[colIndex].selectedOption = '';
+        setTeacherCols(newTeacherCols);
+        break;
+      } else {
+        const newTeacherCols = [...teacherCols];
+        newTeacherCols[colIndex].selectedOption = value;
+        setTeacherCols(newTeacherCols);
+        break;
+      }
+    }
+    // const newData = teacher.filter(item => item.id !== parseInt(value));
+    // console.log(newData)
+    // setTeacher(newData)
+
   };
+  // const handleChange = (e) => {
+  //   setSelectedValue(e.target.value);
+  //   const newData = data.filter(item => item.value !== e.target.value);
+  //   setData(newData);
+  // };
+
 
   const handleAddButtonClick = () => {
     const newCol = {
@@ -248,9 +344,14 @@ const Search1 = () => {
       label: `อาจารย์ท่านที่ ${teacherCols.length + 1}`,
       selectedOption: '',
     };
+    // console.log(teacherCols)
     setTeacherCols([...teacherCols, newCol]);
   };
-
+  // const handleChange = (e) => {
+  //   setSelectedValue(e.target.value);
+  //   const newData = data.filter(item => item.value !== e.target.value);
+  //   setData(newData);
+  // };
   const handleRemoveColClick = () => {
     if (teacherCols.length > 1) {
       const newTeacherCols = [...teacherCols];
@@ -258,7 +359,9 @@ const Search1 = () => {
       setTeacherCols(newTeacherCols);
     }
   };
+  //--------------------
 
+  //--------------------
   return (
     <>
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
@@ -304,18 +407,25 @@ const Search1 = () => {
                     <>
                       <Row>
                         <Col>
-                          <Input
-                            type="select"
-                            value={teacherCol.selectedOption}
-                            onChange={(e) => handleSelectChange(index, e.target.value)}
-                          >
-                            <option value=""></option>
-                            {teacher.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.user_firstname_th} {option.user_lastname_th}
-                              </option>
-                            ))}
-                          </Input>
+                          <form>
+                            {/* Other form fields */}
+                            <Input
+                              type="select"
+                              value={teacherCol.selectedOption}
+                              onChange={(e) => handleSelectChange(index, e.target.value)}
+                            // onChange={handleChange}
+
+                            >
+                              <option value=""></option>
+                              {teacher.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.user_firstname_th} {option.user_lastname_th}
+                                </option>
+                              ))}
+                            </Input>
+                            {/* Form submission button or other actions */}
+                          </form>
+
                         </Col>
                       </Row>
                     </>
@@ -324,6 +434,35 @@ const Search1 = () => {
               ))}
 
             </Row>
+
+            <Modal isOpen={modaldes} toggle={toggledes} >
+              <ModalHeader toggle={toggledes}>Des</ModalHeader>
+              <ModalBody>
+                <Row>
+                  <Col lg="12">
+                    <FormGroup>
+                      <Label for="exampleText">
+                        รายละเอียด
+                      </Label>
+                      <Input
+                        id="exampleText"
+                        name="text"
+                        type="textarea"
+                        rows="10"
+                        value={des}
+                        onChange={e => setDes(e.target.value)}
+                        disabled
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="secondary" onClick={toggledes}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
 
 
             {/* <Row >
@@ -358,7 +497,7 @@ const Search1 = () => {
 
           </CardHeader>
           <Col xs="12">
-          {user_type === 'teacher' && <Button style={{ "margin-left": "9px", float: "right" }} onClick={handleAddButtonClick}
+            {user_type === 'teacher' && <Button style={{ "margin-left": "9px", float: "right" }} onClick={handleAddButtonClick}
               color="primary"
             >
               + เพิ่มอาจารย์
@@ -475,13 +614,13 @@ const Search1 = () => {
                               borderBottom: '1px solid #000000',
                               borderLeft: '1px solid #000000',
                               borderRight: '1px solid #000000',
-                            }} colspan="3" rowspan={data.groupuniversitys.length + 1} align="center" valign="middle"><font color="#000000">{data.name_university}</font></td>
+                            }} colspan="3" rowspan={data.groupuniversitys.length + 1} align="center" valign="middle"><font color="#000000"> <a style={{ color: "blue", cursor: "pointer" }} onClick={() => getuserbyidDatauniversity(data.id_university)}>{data.name_university}</a></font></td>
                             <td style={{
                               borderTop: '1px solid #000000',
                               borderBottom: '1px solid #000000',
                               borderLeft: '1px solid #000000',
                               borderRight: '1px solid #000000',
-                            }} rowspan={data.groupuniversitys.length + 1} align="center" valign="middle" sdval="3" sdnum="1033;"><font color="#000000">{data.unit_university}</font></td>
+                            }} rowspan={data.groupuniversitys.length + 1} align="center" valign="middle" sdval="3" sdnum="1033;"><font color="#000000">{data.unit_university} </font></td>
                           </tr>
                           {data.groupuniversitys.map((university, subIndex) => (
                             <tr key={subIndex}>
@@ -508,7 +647,7 @@ const Search1 = () => {
                                 align="center"
                                 valign="bottom"
                               >
-                                {university.sub_name}
+                                <a style={{ color: "blue", cursor: "pointer" }} onClick={() => getuserbyidDatasubject(university.id_subject)}>    {university.sub_name}</a>
                               </td>
                               <td
                                 style={{

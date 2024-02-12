@@ -140,7 +140,7 @@ import { event } from "jquery";
 //   );
 // };
 const Information = () => {
-  const [searchTerm, setSearchTerm] = useState();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [modal, setModal] = useState(false);
   const toggle = () => setModal(!modal);
@@ -154,15 +154,56 @@ const Information = () => {
   const [unit, setUnit] = useState([]);
   const [flagboo, setFlagboo] = useState(false);
   const [university_year, setUniversity_year] = useState('');
+  const [id_branch, setIDBranch] = useState();
+  const [branch_names, setBranchNames] = useState([]);
   useEffect(() => {
-    //  getuserData()
+    // getuserData()
     handleSelectChange()
+    getBranchName()
   }, []);
   const handleClickInsideTables = async () => {
-    const response = await SearchTermd({
-      searchTerm: searchTerm,
-    });
-    console.log(response)
+    let response
+    if (university_year != '' && searchTerm != '' && id_branch != '') {
+      response = await SearchTermd({
+        searchTerm: searchTerm,
+        selectedYear: university_year || '',
+        selectebranch: id_branch || '', 
+      });
+    } else if (searchTerm != '') {
+      response = await SearchTermd({
+        searchTerm: searchTerm  || '',
+      });
+    } else if (university_year != '' && university_year != undefined && id_branch === '') {
+      response = await university_years({
+        selectedYear: university_year  || '',
+      });
+    } else if (id_branch != '' && (university_year === '' || university_year === undefined) ) {
+      response = await search_branch({
+        selectebranch: id_branch  || '',
+      });
+    } else if(id_branch != '' && university_year != ''){
+      response = await search_branch({
+        selectebranch: id_branch  || '',
+        selectedYear: university_year  || '',
+      });
+    }
+
+    else {
+      response = await university_years({
+        selectedYear: university_year,
+      });
+    }
+    if (response.length == 0) {
+      Swal.fire('ระบบได้ดำ เนินการค้นหาแล้ว แต่ไม่พบข้อมูล', '', 'error')
+    }
+    console.log(response);
+    setItems(response)
+
+    // const response = await SearchTermd({
+    //   searchTerm: searchTerm,
+    //   universityYears: university_year,
+    // });
+    // console.log(response)
     setSortedData(response)
   };
   let getuserData = async () => {
@@ -181,19 +222,47 @@ const Information = () => {
     setItems(item)
     // handleSort("group")
   };
+
+  let getData = async () => {
+    let item = await get_universityAll()
+    setGroup([])
+    let arr = []
+    item.forEach(i => {
+      let bo = {
+        groups: i.group
+      }
+      arr.push(i.group)
+    });
+    const duplicates = findDuplicates(arr);
+    setGroup(duplicates)
+
+  };
+  const getBranchName = async () => {
+    let branch_names2 = await get_branchall()
+    console.log(branch_names2)
+    setBranchNames(branch_names2)
+  };
+
   const getuserbyidData = async (ids) => {
     setFlagboo(false)
-    for (let i = 0; i < items.length; i++) {
-      if (ids === items[i].id_subject) {
+    for (let i = 0; i < sortedData.length; i++) {
+      if (ids === sortedData[i].id_subject) {
         setIds(ids)
-        setDes(items[i].explanation)
-        setIdsubject(items[i].id_subject)
-        setSubname(items[i].sub_name)
+        setDes(sortedData[i].explanation)
+        setIdsubject(sortedData[i].id_subject)
+        setSubname(sortedData[i].sub_name)
+        setUnit(sortedData[i].unit)
+        setUniversity_year(sortedData[i].university_year)
+        // setBranchNames(sortedData[i].branch_names)
+
       }
     }
+    // console.log(sortedData);
+    getData()
     toggle()
+
   };
-  let [sortedData, setSortedData] = useState([{ id: "", group: "", id_subject: "", sub_name: "", unit: "" }]);
+  let [sortedData, setSortedData] = useState([]);
   let [sortDirection, setSortDirection] = useState('asc');
   const handleSort = (column) => {
     const sorted = [...sortedData].sort((a, b) => {
@@ -212,9 +281,16 @@ const Information = () => {
       id_subject: id_subject,
       sub_name: sub_name,
       explanation: des,
+      group: group,
+      unit: unit,
       university_year: university_year,
+      branch: id_branch,
     });
-    getuserData()
+    const response3 = await university_years({
+      searchTerm: university_year || undefined,
+    });
+    console.log(response3);
+    // getuserData()
     toggle()
     // setSortedData(response)
   };
@@ -227,8 +303,12 @@ const Information = () => {
       group: group,
       unit: unit,
       university_year: university_year,
+      branch: id_branch,
     });
-    getuserData()
+    if (response.length != 0) {
+      Swal.fire('บันทึกสำเร็จ', '', 'success')
+    }
+    // getuserData()
     toggle()
     // setSortedData(response)
   };
@@ -240,7 +320,12 @@ const Information = () => {
     setDes('')
     setUnit('')
     toggle()
+    // getuserData()
+    getData()
   };
+  const handleSelectbranch = (event) => {
+    // setBranchName(event.target.value)
+  }
   const handleSelectChangeAdddata = (event) => {
     setGroups(event.target.value)
   }
@@ -258,20 +343,23 @@ const Information = () => {
           id_subject: ids
         });
         Swal.fire('Dalete!', '', 'success')
-        getuserData()
+        window.location.reload()
+        // getuserData()
       }
     })
 
   }
   const handleSelectChange = async (event) => {
     // console.log(event.target.value)
-    // setUniversity_year(event.target.value);
-    const response = await university_years({
-      searchTerm: event?.target?.value || undefined,
-    });
-    setSortedData(response)
 
-
+    setUniversity_year(event?.target?.value);
+    // const response = await university_years({
+    //   searchTerm: event?.target?.value || undefined,
+    // });
+    // setSortedData(response)
+  };
+  const branchSelectChange = (event) => {
+    setIDBranch(event.target.value); // เมื่อมีการเปลี่ยนแปลงค่าใน <select> ให้อัปเดตค่า selectedValue
   };
   return (
     <>
@@ -286,12 +374,12 @@ const Information = () => {
       <Container className="mt--7" fluid>
         {/* Table */}
         <Row>
-          <Col lg="3" >
+          <Col lg="2" >
             <Input
               onChange={e => setSearchTerm(e.target.value)}
             />
           </Col>
-          <Col lg="3" >
+          <Col lg="2" >
             <FormGroup>
 
               <Input
@@ -326,8 +414,37 @@ const Information = () => {
                 </option>
               </Input>
             </FormGroup>
+
           </Col>
           <Col lg="3" >
+            <FormGroup>
+              <Input
+                id="exampleSelect"
+                name="select"
+                type="select"
+                onChange={(event) => branchSelectChange(event)}
+              >
+                <option value={''}>
+                  เลือกสาขา
+                </option>
+                {branch_names.map(option => (
+                  <option key={option.id} value={option.id}>{option.branch_name}</option>
+                ))}
+              </Input>
+            </FormGroup>
+            {/* <FormGroup>
+              <Input type="select"   name="select"   onChange={(event) => handleSelectChange(event)}
+              >
+            
+                {branch_names.map(option => (
+                  <option key={option.id} value={option.id}>{option.branch_name}</option>
+                ))}
+                
+
+              </Input>
+            </FormGroup> */}
+          </Col>
+          <Col lg="2" >
             <Button color="primary" onClick={handleClickInsideTables}>
               ค้นหา
             </Button>
@@ -339,6 +456,7 @@ const Information = () => {
               + เพิ่มรายวิชา
             </Button>
           </Col>
+
         </Row>
 
         <br></br>
@@ -374,6 +492,11 @@ const Information = () => {
                         หน่วยกิต
                       </center>
                     </th>
+                    <th  >
+                      <center>
+                        สาขา
+                      </center>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -399,6 +522,7 @@ const Information = () => {
                       <td> {data.id_subject} </td>
                       <td> {data.sub_name} </td>
                       <td> {data.unit}</td>
+                      <td> {data.branch} </td>
                     </tr>
                   ))}
                 </tbody>
@@ -488,7 +612,20 @@ const Information = () => {
                             onChange={e => setDes(e.target.value)}
                           />
                         </FormGroup>
-                        
+                        <FormGroup>
+                          <label htmlFor="branchSelect">เลือกสาขา </label>
+                          <Input
+                            id="branchSelect"
+                            name="select"
+                            type="select"
+                            onChange={(event) => branchSelectChange(event)}
+                          >
+                            <option value="">Select an option</option>
+                            {branch_names.map(option => (
+                              <option key={option.id} value={option.id}>{option.branch_name}</option>
+                            ))}
+                          </Input>
+                        </FormGroup>
                       </Col>
                     </Row>
                   </ModalBody>
@@ -566,6 +703,16 @@ async function university_years(bodys) {
   })
     .then(data => data.json())
 }
+async function search_branch(bodys) {
+  return await fetch('https://api-ii.onrender.com/system/search_branch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bodys)
+  })
+    .then(data => data.json())
+}
 async function add_university(bodys) {
   return await fetch('https://api-ii.onrender.com/system/add_university', {
     method: 'POST',
@@ -589,6 +736,16 @@ async function update_university(bodys) {
 async function del_university(bodys) {
   return await fetch('https://api-ii.onrender.com/system/dalete_university', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bodys)
+  })
+    .then(data => data.json())
+}
+async function get_branchall(bodys) {
+  return await fetch('https://api-ii.onrender.com/system/get_branchall', {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },

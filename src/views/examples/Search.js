@@ -220,7 +220,7 @@ const Search = () => {
                     </th>
                     <th>
                       <center>
-                        มหาลัยเดิม
+                      หลักสูตร ปวส.
                       </center>
                     </th>
                     <th>

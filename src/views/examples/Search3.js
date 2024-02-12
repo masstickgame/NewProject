@@ -196,9 +196,11 @@ const Search3 = () => {
       id_subject: id_subject,
       sub_name: sub_name,
       explanation: explanation,
+      unit: selectedUnit,
     }
+    console.log(body)
     const response = await add_subject(body);
-    Swal.fire('Save!', '', 'success')
+    Swal.fire('บันทึกเรียบร้อยแล้ว ข้อมูลจะถูกแสดงในส่วนฟังก์ชันเพิ่มวิชา ระดับ ป.ตรี', '', 'success')
     toggle2()
   }
   const open_sub = async () => {
@@ -255,7 +257,7 @@ const Search3 = () => {
             <Button style={{ "margin-left": "9px", float: "right" }} onClick={addCourse}
               color="primary"
             >
-              + เพิ่มรายวิชาใหม่
+              + เพิ่มวิชา ระดับ ป.ตรี
             </Button>
             <Button style={{ "margin-left": "9px", float: "right" }} onClick={add_course}
               color="success"
@@ -265,7 +267,7 @@ const Search3 = () => {
             <Button style={{ "margin-left": "9px", float: "right" }} onClick={open_sub}
               color="warning"
             >
-              + เพิ่มรายวิชาเก่า
+              + เพิ่มวิชา ระดับ ปวส.
             </Button>
             <Button color="primary" onClick={backtomainadmin} > กลับหน้าหลัก </Button>
           </Col>
@@ -425,7 +427,7 @@ const Search3 = () => {
           </Col>
         </Row>
         <Modal isOpen={modal} toggle={toggle} {...args} size='lg'>
-          <ModalHeader toggle={toggle}>Add</ModalHeader>
+          <ModalHeader toggle={toggle}></ModalHeader>
           <ModalBody>
             <Card
               className="my-2"
@@ -435,7 +437,7 @@ const Search3 = () => {
               }}
             >
               <CardHeader>
-                รายวิชาสถาบันใหม่
+              เพิ่มวิชา ระดับ ป.ตรี
               </CardHeader>
               <CardBody>
                 <Row>
@@ -505,7 +507,7 @@ const Search3 = () => {
               }}
             >
               <CardHeader>
-                รายวิชาสถาบันเดิม
+              เพิ่มวิชา ระดับ ปวส.
               </CardHeader>
               {itemSchool.map((data2, idx) => (
                 <Card
@@ -587,7 +589,7 @@ const Search3 = () => {
           </ModalFooter>
         </Modal>
         <Modal isOpen={modal2} toggle={toggle2} {...args} size='lg'>
-          <ModalHeader toggle={toggle2}>Add</ModalHeader>
+          <ModalHeader toggle={toggle2}></ModalHeader>
           <ModalBody>
             <Card
               className="my-2"
@@ -597,7 +599,7 @@ const Search3 = () => {
               }}
             >
               <CardHeader>
-                รายวิชาสถาบันเดิม
+              เพิ่มวิชา ระดับ ปวส.
               </CardHeader>
               <CardBody>
                 <Row>
@@ -634,15 +636,15 @@ const Search3 = () => {
                   <Col lg="4">
                     <FormGroup>
                       <Label for="Name">
-                      อาจารย์ที่ปรึกษา
+                      หน่วยกิต
                       </Label>
                       <Input
                         id="names"
                         name="names"
-                        placeholder="กรอกชื่อวิชา"
+                        placeholder="หน่วยกิต"
                         type="text"
-                        value={sub_name}
-                        onChange={e => setSub_name(e.target.value)}
+                        value={selectedUnit}
+                        onChange={e => setSelectedUnit(e.target.value)}
                       />
                     </FormGroup>
                   </Col>

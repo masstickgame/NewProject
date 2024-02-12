@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // react component that copies the given text inside your clipboard
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import Swal from 'sweetalert2'
 // reactstrap components
 import {
   Card,
@@ -41,15 +42,24 @@ const Icons = () => {
   const [id, setId] = useState();
   const [user_firstname_th, setFirstnameth] = useState();
   const [user_lastname_th, setLastnameth] = useState();
+  const [searchTerm, setSearchTerm] = useState();
+  const [teacher_id, setTeacher_id] = useState();
+  const [teacher, setTeacher] = useState([]);
+  const [teacher_name, setTeacherName] = useState([]);
 
   useEffect(() => {
     getuserData()
+    getuserDataTeacher()
   }, []);
 
   const getuserData = async () => {
     let users = await get_userall()
     setItems(users)
     console.log(user_type)
+  };
+  const getuserDataTeacher = async () => {
+    let users = await get_userall_teacher()
+    setTeacher(users)
   };
   const getuserbyidData = async (ids) => {
     const response = await get_userbyid({
@@ -59,6 +69,8 @@ const Icons = () => {
     setId(ids)
     setUserFirstname(response[0].user_firstname)
     setUserLastname(response[0].user_lastname)
+    setFirstnameth(response[0].user_firstname_th)
+    setLastnameth(response[0].user_lastname_th)
     setuseYear(response[0].user_year)
     setUserUnit(response[0].user_unit)
     setIdCarde(response[0].id_card)
@@ -68,11 +80,31 @@ const Icons = () => {
     toggleEdit()
 
   };
+  const Searchname = async () => {
+
+    let users = await get_userall_name({
+      searchTerm: searchTerm,
+    })
+    setItems(users)
+
+
+  };
+  const handleteacherChange = (event) => {
+    setTeacher_id(event.target.value); // เมื่อมีการเปลี่ยนแปลงค่าใน <select> ให้อัปเดตค่า selectedValue
+    console.log(teacher)
+    teacher.forEach(i => {
+
+      if (i.id === parseInt(event.target.value)) {
+        setTeacherName(i.user_firstname_th + ' ' + i.user_lastname_th)
+        setTeacher_id(parseInt(event.target.value))
+      }
+    });
+  };
   const adduserData = async () => {
     const substringResult = user_lastname.substring(0, 1);
     let nameStr = user_firstname + '.' + substringResult
-    if(user_type === 'teacher'){
-      setStudentId(tel) 
+    if (user_type === 'teacher') {
+      setStudentId(tel)
     }
     const response = await add_user({
       user_name: nameStr,
@@ -86,16 +118,26 @@ const Icons = () => {
       tel,
       student_id,
       user_firstname_th,
-      user_lastname_th
+      user_lastname_th,
+      teacher_id: teacher_id,
+      teacher_name: teacher_name
     });
+    if (response.length != 0) {
+      if (response.message === 'Username และ Password มีอยู่ในระบบแล้ว') {
+        Swal.fire(response.message, '', 'error')
+      } else {
+        Swal.fire('บันทึกสำเร็จ', '', 'success')
+      }
+
+    }
     toggle()
     getuserData()
   };
   const updateuserData = async () => {
     const substringResult = user_lastname.substring(0, 1);
     let nameStr = user_firstname + '.' + substringResult
-    if(user_type === 'teacher'){
-      setStudentId(tel) 
+    if (user_type === 'teacher') {
+      setStudentId(tel)
     }
     const response = await updateuser({
       id: id,
@@ -110,10 +152,13 @@ const Icons = () => {
       tel,
       student_id,
       user_firstname_th,
-      user_lastname_th
+      user_lastname_th,
+      teacher_id: teacher_id,
+      teacher_name: teacher_name
     });
     toggleEdit()
     getuserData()
+    // console.log(response);
   };
   const deleteuserData = async () => {
     const response = await deleteuser({
@@ -144,11 +189,12 @@ const Icons = () => {
         <Row>
           <Col lg="4" >
             <Input
+              onChange={e => setSearchTerm(e.target.value)}
             />
           </Col>
           <Col lg="4" >
             <Button
-              color="primary"
+              ccolor="primary" onClick={Searchname}
             >
               ค้นหา
             </Button>
@@ -173,12 +219,12 @@ const Icons = () => {
                     </th>
                     <th>
                       <center>
-                      Firstname
+                        Firstname
                       </center>
                     </th>
                     <th>
                       <center>
-                      Lastname
+                        Lastname
                       </center>
                     </th>
                     <th>
@@ -194,6 +240,11 @@ const Icons = () => {
                     <th>
                       <center>
                         สิทธิ์การใช้งาน
+                      </center>
+                    </th>
+                    <th>
+                      <center>
+                        อาจารย์ที่ปรึกษา
                       </center>
                     </th>
                   </tr>
@@ -213,12 +264,14 @@ const Icons = () => {
                       <td> {data.user_lastname}</td>
                       <td> {data.user_firstname_th} </td>
                       <td> {data.user_lastname_th}</td>
+
                       <td>
                         {data.user_type === "admin" && "ผู้ดูแล"}
                         {data.user_type === "user" && "ผู้ใช้ทั่วไป"}
                         {data.user_type === "teacher" && "อาจารย์"}
 
                       </td>
+                      <td> {data.teacher}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -227,7 +280,7 @@ const Icons = () => {
           </Col>
         </Row>
         <Modal isOpen={modal} toggle={toggle} {...args}>
-          <ModalHeader toggle={toggle}>Add</ModalHeader>
+          <ModalHeader toggle={toggle}>เพิ่มรายชื่อผู้ใช้งาน</ModalHeader>
           <ModalBody>
             <Row>
               <Col lg="12">
@@ -258,12 +311,12 @@ const Icons = () => {
               </Col>
               {user_type != "undefined" && <Col lg="6">
                 <FormGroup>
-                  <Label for="user_firstname">
-                  Firstname
+                  <Label for="user_firstname_th">
+                    Firstname
                   </Label>
                   <Input
-                    id="user_firstname"
-                    name="user_firstname"
+                    id="user_firstname_th"
+                    name="user_firstname_th"
                     placeholder="Enter Firstname"
                     type="text"
                     onChange={e => setUserFirstname(e.target.value)}
@@ -273,12 +326,12 @@ const Icons = () => {
               {user_type != "undefined" &&
                 <Col lg="6">
                   <FormGroup>
-                    <Label for="user_lastname">
-                    Lastname
+                    <Label for="user_lastname_th">
+                      Lastname
                     </Label>
                     <Input
-                      id=""
-                      name="user_lastname"
+                      id="user_lastname_th"
+                      name="user_lastname_th"
                       placeholder="Enter Firstname"
                       type="text"
                       onChange={e => setUserLastname(e.target.value)}
@@ -286,7 +339,7 @@ const Icons = () => {
                   </FormGroup>
                 </Col>
               }
-                {user_type != "undefined" && <Col lg="6">
+              {user_type != "undefined" && <Col lg="6">
                 <FormGroup>
                   <Label for="user_firstname">
                     ชื่อ
@@ -334,7 +387,7 @@ const Icons = () => {
               {user_type == 'user' && <Col lg="6">
                 <FormGroup>
                   <Label for="user_unit">
-                    หน่วยกิต
+                    หน่วยกิตตลอดหลักสูตร
                   </Label>
                   <Input
                     id="user_unit"
@@ -347,7 +400,7 @@ const Icons = () => {
                 </FormGroup>
               </Col>
               }
-              
+
               {/* {user_type == 'user' && <Col lg="6">
                 <FormGroup>
                   <Label for="id_card">
@@ -394,6 +447,21 @@ const Icons = () => {
                 </FormGroup>
               </Col>
               }
+              {/* <Col lg="12"> */}
+              {user_type == 'user' && <Col lg="12">
+                <FormGroup>
+                  <Label for="student_id">
+                    อาจารย์ที่ปรึกษา
+                  </Label>
+                  <Input type="select" value={teacher_id} onChange={handleteacherChange} >
+                    <option value="">Select an option</option>
+                    {teacher.map(teach => (
+                      <option key={teach.id} value={teach.id}>{teach.user_firstname_th} {teach.user_lastname_th}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+              </Col>
+              }
             </Row>
           </ModalBody>
           <ModalFooter>
@@ -406,7 +474,7 @@ const Icons = () => {
           </ModalFooter>
         </Modal>
         <Modal isOpen={modalEdit} toggle={toggleEdit} {...args}>
-          <ModalHeader toggle={toggleEdit}>Edit</ModalHeader>
+          <ModalHeader toggle={toggleEdit}>แก้ไขข้อมูล</ModalHeader>
           <ModalBody>
             <Row>
               <Col lg="12">
@@ -439,7 +507,7 @@ const Icons = () => {
               {user_type != "undefined" && <Col lg="6">
                 <FormGroup>
                   <Label for="user_firstname">
-                  Firstname
+                    Firstname
                   </Label>
                   <Input
                     id="user_firstname"
@@ -455,10 +523,10 @@ const Icons = () => {
                 <Col lg="6">
                   <FormGroup>
                     <Label for="user_lastname">
-                    Lastname
+                      Lastname
                     </Label>
                     <Input
-                      id=""
+                      id="user_lastname"
                       name="user_lastname"
                       placeholder="Enter Firstname"
                       type="text"
@@ -470,12 +538,12 @@ const Icons = () => {
               }
               {user_type != "undefined" && <Col lg="6">
                 <FormGroup>
-                  <Label for="user_firstname">
+                  <Label for="user_firstname_th">
                     ชื่อ
                   </Label>
                   <Input
-                    id="user_firstname"
-                    name="user_firstname"
+                    id="user_firstname_th"
+                    name="user_firstname_th"
                     placeholder="Enter Firstname"
                     type="text"
                     value={user_firstname_th}
@@ -486,13 +554,13 @@ const Icons = () => {
               {user_type != "undefined" &&
                 <Col lg="6">
                   <FormGroup>
-                    <Label for="user_lastname">
+                    <Label for="user_lastname_th">
                       นามสกุล
                     </Label>
                     <Input
-                      id=""
-                      name="user_lastname"
-                      placeholder="Enter Firstname"
+                      id="user_lastname_th"
+                      name="user_lastname_th"
+                      placeholder="Enter Lastname"
                       type="text"
                       value={user_lastname_th}
                       onChange={e => setLastnameth(e.target.value)}
@@ -516,7 +584,7 @@ const Icons = () => {
                 </FormGroup>
               </Col>
               }
-              
+
               {user_type == 'user' && <Col lg="6">
                 <FormGroup>
                   <Label for="user_unit">
@@ -579,6 +647,20 @@ const Icons = () => {
                     value={student_id}
                     onChange={e => setStudentId(e.target.value)}
                   />
+                </FormGroup>
+              </Col>
+              }
+              {user_type == 'user' && <Col lg="12">
+                <FormGroup>
+                  <Label for="student_id">
+                    อาจารย์ที่ปรึกษา
+                  </Label>
+                  <Input type="select" value={teacher_id} onChange={handleteacherChange} >
+                    <option value="">Select an option</option>
+                    {teacher.map(teach => (
+                      <option key={teach.id} value={teach.id}>{teach.user_firstname_th} {teach.user_lastname_th}</option>
+                    ))}
+                  </Input>
                 </FormGroup>
               </Col>
               }
@@ -811,6 +893,28 @@ async function deleteuser(bodys) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(bodys)
+  })
+    .then(data => data.json())
+}
+async function get_userall_name(bodys) {
+  // let token = localStorage.getItem("accessToken")
+  return await fetch('https://api-ii.onrender.com/system/get_userall_name', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bodys)
+  })
+
+    .then(data => data.json())
+}
+async function get_userall_teacher() {
+  // let token = localStorage.getItem("accessToken")
+  return await fetch('https://api-ii.onrender.com/system/get_userall_teacher', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
   })
     .then(data => data.json())
 }

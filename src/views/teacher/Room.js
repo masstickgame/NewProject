@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // react component that copies the given text inside your clipboard
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import Swal from 'sweetalert2'
 // reactstrap components
 import {
     Card,
@@ -61,12 +62,19 @@ const Rooms = () => {
     const getuserDataYear = async () => {
         if (user_year != null && user_year != '') {
             let users = await get_userall_teacher_user_year({
-                user_year: user_year
+                user_year: user_year,
+                teacher_id: localStorage.getItem('user_id')
             })
+            if(users.length == 0){
+                Swal.fire('ไม่พบข้อมูล', '', 'error')
+            }
             setItems(users)
         } else{
+           
             setItems([])
-        }
+            
+        } 
+        
     };
     const getuserbyidData = async (ids) => {
         const response = await get_userbyid({
@@ -103,7 +111,7 @@ const Rooms = () => {
             student_id,
         });
         toggle()
-        getuserData()
+        getuserDataYear()
     };
     const updateuserData = async () => {
         const substringResult = user_lastname.substring(0, 1);
@@ -129,14 +137,14 @@ const Rooms = () => {
             teacher_name : teacher_name
         });
         toggleEdit()
-        getuserData()
+        getuserDataYear()
     };
     const deleteuserData = async () => {
         const response = await deleteuser({
             id: id,
         });
         toggleEdit()
-        getuserData()
+        getuserDataYear()
     };
     let args
     const toggle = () => setModal(!modal);
@@ -524,7 +532,7 @@ const Rooms = () => {
                     </ModalFooter>
                 </Modal>
                 <Modal isOpen={modalEdit} toggle={toggleEdit} {...args}>
-                    <ModalHeader toggle={toggleEdit}>Edit</ModalHeader>
+                    <ModalHeader toggle={toggleEdit}></ModalHeader>
                     <ModalBody>
                         <Row>
                             <Col lg="6">
@@ -690,7 +698,8 @@ async function get_userall_teacher() {
 }
 async function get_userall_teacher_user_year(bodys) {
     // let token = localStorage.getItem("accessToken")
-    return await fetch('https://api-ii.onrender.com/system/get_userall_teacher_user_year', {
+    // return await fetch('https://api-ii.onrender.com/system/get_userall_teacher_user_year', {
+    return await fetch('http://localhost:4025/system/get_userall_teacher_user_year', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

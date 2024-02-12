@@ -54,6 +54,7 @@ const Information = () => {
   const [sub_name2, setSub_name2] = useState('');
   const [des, setDes] = useState([]);
   const [itemsubject, setItemsSubject] = useState([]);
+  
   useEffect(() => {
     getuserbyidData()
     get_school()
@@ -328,6 +329,7 @@ const Information = () => {
         if (arrs.grade != null && arrs.grade != '' && arrs.grade >= 2) {
           arr.groupuniversitys.push(arrs)
         }
+       
       });
       if (arr.groupuniversitys.length != 0) {
         json.push(arr)
@@ -536,7 +538,7 @@ const Information = () => {
 
               </Col>
               <Col lg="4" >
-                มหาลัยเดิม
+              หลักสูตร ปวส.
                 {university_old === null && <Input type="select" value={selectedOption} onChange={handleSelectChange} >
                   <option value="">Select an option</option>
                   {items.map(option => (
@@ -809,8 +811,12 @@ const Information = () => {
           <ModalBody>
             <CardBody>
               <Row>
-                <Col lg="12">
+                <Col lg="12">  
+                <CardHeader>
+              วิชา ระดับ ป.ตรี
+              </CardHeader>
                   <FormGroup>
+                 
                     <Label for="Name">
                       ชื่อวิชา
                     </Label>
@@ -823,6 +829,9 @@ const Information = () => {
                     </Input>
                   </FormGroup>
                 </Col>
+                <CardHeader>
+                วิชา ระดับ ปวส.
+              </CardHeader>
                 <Col lg="12">
                   <FormGroup>
                     <Label for="Name">
@@ -838,8 +847,10 @@ const Information = () => {
                     />
                   </FormGroup>
                 </Col>
-                <Col lg="12">
+                <Col lg="12"> 
+                
                   <FormGroup>
+                   
                     <Label for="Name">
                       ชื่อวิชา
                     </Label>
