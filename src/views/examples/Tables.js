@@ -530,7 +530,7 @@ const Information = () => {
                   ))}
                 </tbody>
                 <Modal isOpen={modal} toggle={toggle} >
-                  <ModalHeader toggle={toggle}>Des</ModalHeader>
+                  <ModalHeader toggle={toggle}>เพิ่มรายวิชา</ModalHeader>
                   <ModalBody>
                     <Row>
                       <Col lg="12">
