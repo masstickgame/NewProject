@@ -401,10 +401,27 @@ const Compare = () => {
                       <td>
                         {data.result_tc}
                       </td>
-
+                      
                     </tr>
                   ))}
                 </tbody>
+                <td></td>
+                <td></td> 
+                <td>รวมหน่วยกิตที่เทียบโอนได้</td>
+                <td> {sum}</td>
+                <td></td>
+                {/* <tbody>
+                  
+                    <tr>
+                      <th scope="row">
+      
+                      </th>
+                      <td>
+                        {data.sum}
+                      </td>
+                    </tr>
+                  
+                </tbody> */}
               </Table>
               <Table borderless>
                 <thead>

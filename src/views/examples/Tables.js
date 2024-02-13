@@ -174,8 +174,10 @@ const Information = () => {
         searchTerm: searchTerm  || '',
       });
     } else if (university_year != '' && university_year != undefined && id_branch === '') {
+      
       response = await university_years({
         selectedYear: university_year  || '',
+        
       });
     } else if (id_branch != '' && (university_year === '' || university_year === undefined) ) {
       response = await search_branch({
@@ -206,6 +208,7 @@ const Information = () => {
     // console.log(response)
     setSortedData(response)
   };
+  
   let getuserData = async () => {
     let item = await get_universityAll()
     setGroup([])
