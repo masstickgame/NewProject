@@ -321,7 +321,8 @@ const Maps = () => {
           </Col>
         </Row>
         <Modal isOpen={modal} toggle={toggle} {...args}>
-          <ModalHeader toggle={toggle}>เพิ่มหลักสูตร</ModalHeader>
+        {types === "true" &&<ModalHeader toggle={toggle}>เพิ่มหลักสูตร</ModalHeader>}
+          {types === "false" && <ModalHeader toggle={toggle}>แก้ไข</ModalHeader>}
           <ModalBody>
             <Row>
               <Col lg="12">
