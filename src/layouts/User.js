@@ -55,7 +55,7 @@ const User = (props) => {
         routes={routes}
         logo={{
           innerLink: "/auth/login",
-          imgSrc: require("../assets/img/brand/argon-react.png"),
+          imgSrc: require("../assets/img/brand/GGGGG.png"),
           imgAlt: "..."
         }}
       />
